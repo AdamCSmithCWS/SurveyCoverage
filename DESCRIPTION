@@ -1,12 +1,22 @@
 Package: SurveyCoverage
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Calculating the Spatial Coverage of Bird Monitoring Programs
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Adam C. Smith
+Maintainer: Adam C. Smith <adamcsmith.birdstats@gmail.com>
+Description: Includes functions to calculate the proportion of a species' range that is covered by a long-term monitoring program, such as the North American Breeding Bird Survey. 
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1
+Imports: 
+    dplyr,
+    ebirdst,
+    magrittr,
+    methods,
+    sf,
+    stringr,
+    tidyselect,
+    units
+Depends: 
+    R (>= 2.10)
