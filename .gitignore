@@ -4,4 +4,7 @@
 .Ruserdata
 *testing.R
 inst/temp/
+ebirdst_key_adam.R
+FWS_segment_locations.csv
+all_data_with_zeros.rds
 

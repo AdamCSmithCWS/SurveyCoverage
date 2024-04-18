@@ -43,7 +43,7 @@
 #' ex_range <- grid_range(species = "Baird's Sparrow")
 #'
 #' ex_non_breeding_range <- grid_range(species = "American Robin",
-#' "non_breeding")
+#' "nonbreeding")
 #'
 grid_range <- function(species = NULL,
                            seasonal_range = "breeding",
