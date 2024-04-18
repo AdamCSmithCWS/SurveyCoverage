@@ -42,8 +42,9 @@
 #' multi-species surveys. Setting to FALSE may generate non-finite estimates of
 #' coverage if positive values of area covered within regions with no area in
 #' species' range
-#' @param largest logical passed to `sf::st_join` function. Default is TRUE.
-#'
+#' @param largest logical passed to `sf::st_join` function. Default is FALSE
+#' @param quiet logical FALSE by default, set to TRUE to suppress warning and
+#' progress messages
 #'
 #' @return A list
 #' @export
@@ -67,7 +68,8 @@ overlay_range_data <- function(range, #output list from grid_w_range()
                           y_coord = "latitude",
                           crs_site_coordinates = 4326,
                           add_survey_sites_to_range = TRUE,
-                          largest = TRUE) {
+                          largest = FALSE,
+                          quiet = FALSE) {
 
   # test survey_sites structure
   if(!sites %in% names(survey_sites)){
@@ -77,38 +79,39 @@ overlay_range_data <- function(range, #output list from grid_w_range()
   }
 
   if(!years %in% names(survey_sites)){
+    if(!quiet){
     warning(paste("since column",years,"is missing from survey_sites object
                continuing with coverage assuming it is constant through time.
                If annual survey information is available and desired, check
                that argument years identifies the column name (character) that
                contains the unique year-identifier"))
+    }
     survey_sites <- survey_sites %>%
       dplyr::mutate(year = 1)
 
   }
 
   #rename survey_sites columns for tidy select
-  survey_sites <- survey_sites %>%
-    dplyr::rename_with(., ~stringr::str_replace(.,
-                                                pattern = sites,
-                                                replacement = "site"),
-                       .cols = tidyselect::matches(sites)) %>%
-    dplyr::rename_with(., ~stringr::str_replace(.,
-                                                pattern = years,
-                                                replacement = "year"),
-                       .cols = tidyselect::matches(years))
+  names(survey_sites)[which(names(survey_sites) == sites)] <- "site"
+  names(survey_sites)[which(names(survey_sites) == years)] <- "year"
+
+
 
 
     if(class(survey_sites)[1] == "sf"){
-      message("input survey_sites is a simple features spatial object")
+      if(!quiet){
+        message("input survey_sites is a simple features spatial object")
+      }
     }else{
+      if(!quiet){
+
       message(paste("input survey_sites is data frame. Creating spatial POINTS
                     using coordinates provided in arguments x_coord and y_coord.
                     Please ensure that the coordinates are latitude and longitude
                     decimal degrees with coordinate reference system WGS 84,
                     or that the correct coordinate reference system was provided
                     to the argument crs_site_coordinates"))
-
+}
 
       survey_sites <- survey_sites %>%
         sf::st_as_sf(.,
@@ -145,8 +148,12 @@ crs_equal_area_custom <- sf::st_crs(cov_grid)
 
 
   #perform spatial join
+  if(!quiet){
+
   message("Performing spatial join with range, this may take 5-10 minutes...")
-  map_coverage <- cov_grid %>%
+  }
+ suppressWarnings(
+   map_coverage <- cov_grid %>%
     sf::st_join(.,
                 survey_sites,
                 join = sf::st_intersects,
@@ -162,12 +169,16 @@ crs_equal_area_custom <- sf::st_crs(cov_grid)
     dplyr::mutate(n_sites = ifelse(coverage,
                                    n_sites,
                                    n_sites-1))
+  )
 
   map_coverage$area_km2 <- as.numeric(sf::st_area(map_coverage)/1e6)
 
   if(add_survey_sites_to_range){
+    if(!quiet){
+
     message("Reconciling range area to include grid cells with
           data outside of species' seasonal range")
+    }
     #ID grid cells with some data only
     w_some_data <- map_coverage %>%
       dplyr::filter(coverage) %>%
@@ -208,7 +219,7 @@ crs_equal_area_custom <- sf::st_crs(cov_grid)
     units::set_units(.,"km^2")
 
   #expand to complete grid-cell by year dataset
-  years_all <- as.integer(sort(unique(map_coverage$year)))
+  years_all <- sort(unique(map_coverage$year))
   total_grid_range_yearly <- NULL
   for(y in years_all){ # yes, it seems silly to have to loop this
     # but I don't know of an expand.grid style function that works
@@ -276,8 +287,8 @@ crs_equal_area_custom <- sf::st_crs(cov_grid)
   ret_list <- list(coverage_map = map_coverage_full,
                    cumulative_coverage_map = cumulative_coverage_map,
                    total_gridded_range_area = total_grid_range_area,
-                   total_coverage_estimate = total_coverage,
-                   annual_coverage_estimate = annual_coverage)
+                   annual_coverage_estimate = annual_coverage,
+                   cumulative_coverage_estimate = total_coverage)
 
 
   return(ret_list)

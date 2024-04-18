@@ -8,18 +8,32 @@
 #'
 #' @param species character English common name of bird species to
 #' support range data download using eBirdst package
-#' @param seasonal_range character default = breeding, season of
-#' monitoring program data and if possible range map
-#' @param range_map optional sf package simple features polygon layer defining
-#' the species' seasonal range
+#' @param seasonal_range character default = breeding, season of range map to
+#' download. Acceptable values depend on the species' range estimates available
+#' from ebirdst, including: "breeding", "nonbreeding", "postbreeding_migration",
+#' and "prebreeding_migration", for migratory species and "resident" for
+#' non-migratory species.
+#' @param range_map Not yet implemented: eventually optional user-loaded range map
+#' e.g., sf package polygon layer defining the species' seasonal range
 #' @param crs_equal_area_custom optional crs numerical identifier of equal area
 #' coordinate system
 #' @param coverage_grid_custom optional sf package simple features polygon
 #' layer, equal area grid within which to calculate coverage
-#' @param resolution character default = 27km (low resolution), argument passed
-#' to `ebirdst::load_ranges()` function
+#' @param resolution character default = "27km" (low resolution), argument passed
+#' to `ebirdst::load_ranges()` function. Alternate high resolution = "9km".
+#' @param quiet logical FALSE by default, set to TRUE to suppress warning and
+#' progress messages
 #'
-#' @return A list
+#' @return A list with four components:
+#'
+#' 1.  coverage_grid - a map representing the species' eBird range map intersected with a regular grid. A simple feature `sf` polygon object of the regular grid applied to the range map.  If the defaults were used in the `grid_range()` function, then this will be a regular hexagonal grid that covers the Western Hemisphere with individual hexagons measuring approximately 120 km between parallel sides. If a custom regular grid was supplied to the function, e.g., `grid_range(..., coverage_grid_custom = my_regular_grid)`, then this will reflect the resolution and extent of that custom grid. The attributes will include at least these four columns: a unique name for each grid cell (grid_cell_name), the land area of the grid cell in squared kilometers (area_km2), the land area of the grid cell that is covered by the species' range (area_km2_inrange), the proportion of the grid cell's land area covered by the species' range (proportion_in_range).
+#'
+#' 2.  range_map - a map. A simple feature sf polygon object that represents the downloaded eBird range map.
+#'
+#' 3.  range_area - numeric. The total land area within the species' eBird range map.
+#'
+#' 4.  range_area_gridded - numeric. The total land area of grid cells that intersect with the species' eBird range map.
+#'
 #' @export
 #'
 #' @examples
@@ -28,12 +42,16 @@
 #'
 #' ex_range <- grid_range(species = "Baird's Sparrow")
 #'
+#' ex_non_breeding_range <- grid_range(species = "American Robin",
+#' "non_breeding")
+#'
 grid_range <- function(species = NULL,
                            seasonal_range = "breeding",
                            range_map = NULL,
                            crs_equal_area_custom = NULL,
                            coverage_grid_custom = NULL,
-                           resolution = "27km"){
+                           resolution = "27km",
+                       quiet = FALSE){
 
 
 if(is.null(species)){
@@ -68,7 +86,9 @@ if(is.null(species)){
     #if range map not provided, then download the seasonal eBird range map
 
     species_ebird <- ebirdst::get_species(species)
-    message(paste("Downloading ebirdst range data for",species,species_ebird))
+    if(!quiet){
+      message(paste("Downloading ebirdst range data for",species,species_ebird))
+    }
     down <- try(ebirdst::ebirdst_download_status(species_ebird,
                                         download_ranges = TRUE,
                                         download_abundance = FALSE),
@@ -88,16 +108,15 @@ if(is.null(species)){
         dplyr::filter(season == seasonal_range)%>%
         sf::st_make_valid()
     }else{
-      warning(paste("user selected season",seasonal_range,"does not exist in the
-             eBirdst database. Trying eBirdst data for resident - year round"))
-      seasonal_range <- "resident"
-      abd_range_original <- abd_seasonal_range %>%
-        dplyr::filter(season == seasonal_range) %>%
-        sf::st_make_valid()
+      stop(paste("user selected season",seasonal_range,"does not exist in the
+             eBirdst database. For",species,"try one of the following[",paste(
+               unique(abd_seasonal_range$season), collapse = ", "),"]"))
     }
 
 
-    message("cropping range map to the Western Hemisphere")
+    if(!quiet){
+      message("cropping range map to the Western Hemisphere")
+    }
     #generate a simplified cropping polygon to exclude range outside
     #of the coverage grid (supplied or default)
     west_crop <- cov_grid %>%
@@ -115,13 +134,17 @@ if(is.null(species)){
     )
     abd_range <- sf::st_make_valid(abd_range)
 
-    message("intersecting range map and coverage grid")
+    if(!quiet){
+      message("intersecting range map and coverage grid")
+    }
     hex_range <- suppressWarnings(sf::st_intersection(abd_range,cov_grid)) %>%
       sf::st_make_valid() %>%
       sf::st_union(.,by_feature = TRUE)
 
 
-    message("recalculating land area of grid cells inside range")
+    if(!quiet){
+      message("recalculating land area of grid cells inside range")
+    }
     hex_range <- hex_range %>%
       dplyr::mutate(area_km2_inrange = as.numeric(sf::st_area(hex_range)/1e6))
 
@@ -145,10 +168,13 @@ if(is.null(species)){
 
     }
 
-  full_r <- sum(sf::st_area(abd_range)) %>%
-    units::set_units(.,"km^2")
-  full_r_grid <- sum(sf::st_area(grid_w_range))%>%
-    units::set_units(.,"km^2")
+  just_r <- cov_grid %>%
+    dplyr::filter(proportion_in_range > 0) %>%
+    sf::st_drop_geometry()
+
+  full_r <- sum(just_r$area_km2_inrange)
+
+  full_r_grid <- sum(just_r$area_km2)
 
 
 ret_list <- list(coverage_grid = cov_grid,

@@ -15,7 +15,8 @@ overlay_range_data(
   y_coord = "latitude",
   crs_site_coordinates = 4326,
   add_survey_sites_to_range = TRUE,
-  largest = TRUE
+  largest = FALSE,
+  quiet = FALSE
 )
 }
 \arguments{
@@ -71,7 +72,10 @@ multi-species surveys. Setting to FALSE may generate non-finite estimates of
 coverage if positive values of area covered within regions with no area in
 species' range}
 
-\item{largest}{logical passed to `sf::st_join` function. Default is TRUE.}
+\item{largest}{logical passed to `sf::st_join` function. Default is FALSE}
+
+\item{quiet}{logical FALSE by default, set to TRUE to suppress warning and
+progress messages}
 }
 \value{
 A list
