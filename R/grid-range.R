@@ -153,7 +153,7 @@ if(is.null(species)){
 
 ret_list <- list(coverage_grid = cov_grid,
                  range_map = abd_range,
-                 rangemap_area = full_r,
+                 range_area = full_r,
                  range_area_gridded = full_r_grid)
 
 return(ret_list)
