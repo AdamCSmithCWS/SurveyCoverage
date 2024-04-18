@@ -73,7 +73,7 @@ The package consists of three primary functions:
     data.
 
 3.  `regional_summary()` - conducts a spatial join of a regional map
-    with the coverage maps from `overlay_range_data()` to summarise
+    with the coverage maps from the previous function, to summarise
     coverage within those regions.
 
 ## Example
@@ -153,6 +153,7 @@ map <- ggplot()+
           fill = NA)+
   coord_sf(xlim = focus[c("xmin","xmax")],
            ylim = focus[c("ymin","ymax")])+
+  scale_fill_viridis_c()+
   labs(title = paste(example_species,"Breeding Range"),
        caption = paste(example_species,"breeding season range in the Americas.
                        Orange polygon includes",signif(range_info[["range_area"]],3),
