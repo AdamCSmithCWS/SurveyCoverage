@@ -4,7 +4,12 @@
 \alias{regional_summary}
 \title{Title}
 \usage{
-regional_summary(coverage = NULL, regions = NULL, region_name = "country")
+regional_summary(
+  coverage = NULL,
+  regions = NULL,
+  region_name = "country",
+  quiet = FALSE
+)
 }
 \arguments{
 \item{coverage}{list output of `overlay_range_data`}
@@ -17,9 +22,22 @@ will transform it to match the crs of the maps in argument `coverage`}
 
 \item{region_name}{character column in `regions` object that contains
 the unique region name}
+
+\item{quiet}{logical FALSE by default, set to TRUE to suppress warning and
+progress messages}
 }
 \value{
-A list
+A list with the following five objects
+
+1.   regional_coverage_map - map of the annual coverage grid that includes an indicator of which region the grid cell is allocated to (based on spatial join).
+
+2.    regional_cumulative_coverage_map - map of the cumulative coverage grid that includes an indicator column for region.
+
+3.    regional_map - a map of the polygons used to define the regions.
+
+4.    regional_annual_coverage_estimate - dataframe of area and proportion of range covered in each year plus an additional column indicating which region each grid cell belongs to.
+
+5.    regional_cumulative_coverage_estimate - dataframe of area and proportion of range covered by region.
 }
 \description{
 Title

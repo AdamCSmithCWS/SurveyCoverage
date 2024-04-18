@@ -12,8 +12,21 @@
 #' will transform it to match the crs of the maps in argument `coverage`
 #' @param region_name character column in `regions` object that contains
 #' the unique region name
+#' @param quiet logical FALSE by default, set to TRUE to suppress warning and
+#' progress messages
 #'
-#' @return A list
+#' @return A list with the following five objects
+#'
+#' 1.   regional_coverage_map - map of the annual coverage grid that includes an indicator of which region the grid cell is allocated to (based on spatial join).
+#'
+#' 2.    regional_cumulative_coverage_map - map of the cumulative coverage grid that includes an indicator column for region.
+#'
+#' 3.    regional_map - a map of the polygons used to define the regions.
+#'
+#' 4.    regional_annual_coverage_estimate - dataframe of area and proportion of range covered in each year plus an additional column indicating which region each grid cell belongs to.
+#'
+#' 5.    regional_cumulative_coverage_estimate - dataframe of area and proportion of range covered by region.
+#'
 #' @export
 #'
 #' @examples
@@ -22,7 +35,8 @@
 #'
 regional_summary <- function(coverage = NULL,
                               regions = NULL,
-                              region_name = "country"){
+                              region_name = "country",
+                             quiet = FALSE){
 
 
   if(is.null(regions) | class(regions)[[1]] != "sf"){
@@ -32,12 +46,12 @@ regional_summary <- function(coverage = NULL,
   }
 
 
-  overall_coverage <- coverage[["cumulative_coverage_map"]]
+  cumulative_coverage <- coverage[["cumulative_coverage_map"]]
   annual_coverage <- coverage[["coverage_map"]]
 
   regions_t <- regions %>%
     sf::st_transform(.,
-                     crs = sf::st_crs(overall_coverage))
+                     crs = sf::st_crs(cumulative_coverage))
 
   names(regions_t)[which(names(regions_t) == region_name)] <- "summary_region"
 
@@ -47,19 +61,19 @@ regional_summary <- function(coverage = NULL,
     dplyr::summarise()
 
 suppressWarnings(
-  regional_overall_coverage <- overall_coverage %>%
+  regional_cumulative_coverage <- cumulative_coverage %>%
       sf::st_join(.,regions_t,
                 largest = TRUE)
       )
 
 
-  regional_summary <- regional_overall_coverage %>%
+  regional_summary <- regional_cumulative_coverage %>%
     sf::st_drop_geometry() %>%
     dplyr::group_by(summary_region) %>%
     dplyr::summarise(.,
                      area_region = sum(area_km2))
 
-  regional_overall_coverage_summary <- regional_overall_coverage %>%
+  regional_cumulative_coverage_summary <- regional_cumulative_coverage %>%
     dplyr::inner_join(.,regional_summary,
                by = "summary_region") %>%
     sf::st_drop_geometry() %>%
@@ -67,22 +81,24 @@ suppressWarnings(
     dplyr::group_by(summary_region,coverage) %>%
     dplyr::summarise(.,
                      proportion_of_region = sum(p_region),
-                     area_km2 = sum(area_km2)) %>%
+                     area_km2 = sum(area_km2),
+                     .groups = "drop") %>%
     dplyr::arrange(-coverage)
 
 
   # tst <- ggplot()+
 #   geom_sf(data = regions_t,
 #           aes(colour = summary_region))+
-#   geom_sf(data = regional_overall_coverage,
+#   geom_sf(data = regional_cumulative_coverage,
 #           aes(fill = summary_region))+
 #   facet_wrap(vars(coverage))
 # tst
 
+  if(!quiet){
 message("joining annual coverage map with regions")
-
+}
 suppressWarnings(
-  regional_annual_coverage <- regional_annual_coverage %>%
+  regional_annual_coverage <- annual_coverage %>%
 sf::st_join(.,regions_t,
               largest = TRUE)
 )
@@ -96,7 +112,8 @@ regional_annual_coverage_summary <- regional_annual_coverage %>%
   dplyr::group_by(summary_region,year,coverage) %>%
   dplyr::summarise(.,
                    proportion_of_region = sum(p_region),
-                   area_km2 = sum(area_km2)) %>%
+                   area_km2 = sum(area_km2),
+                   .groups = "drop") %>%
   dplyr::arrange(-coverage,year)
 
 
@@ -120,11 +137,11 @@ regional_annual_coverage_summary <- regional_annual_coverage %>%
 #              cols = vars(year))
 # tst
 
-ret_list <- list(regional_map = regions_t,
-                 regional_overall_coverage_map = regional_overall_coverage,
-                 regional_annual_coverage_map = regional_annual_coverage,
-                 regional_overall_coverage_summary = regional_overall_coverage_summary,
-                 regional_annual_coverage_summary = regional_annual_coverage_summary)
+ret_list <- list(regional_coverage_map = regional_annual_coverage,
+                 regional_cumulative_coverage_map = regional_cumulative_coverage,
+                 regional_map = regions_t,
+                 regional_annual_coverage_estimate = regional_annual_coverage_summary,
+                 regional_cumulative_coverage_estimate = regional_cumulative_coverage_summary)
 
 
 return(ret_list)

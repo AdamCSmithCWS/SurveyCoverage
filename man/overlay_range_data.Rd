@@ -78,7 +78,17 @@ species' range}
 progress messages}
 }
 \value{
-A list
+A list with the following five objects
+
+1.    coverage_map - map of the cells in the species' range that intersect the survey data in each year. If a year column was included with the input data, then this mapped information is repeated for each year of the data. If no year information was included, then this object will be identical to the cumulative_coverage_map
+
+2.    cumulative_coverage_map - map of cells in the species' range that intersect survey data in at least 1 year (if default value of minimum_n_years was used).
+
+3.    total_gridded_range_area - land area of gridded range.
+
+4.    annual_coverage_estimate - dataframe of area and proportion of range covered in each year
+
+5.    cumulative_coverage_estimate = dataframe (1-row) of area and proportion of range covered.
 }
 \description{
 Identify grid with monitoring data

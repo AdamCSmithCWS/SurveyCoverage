@@ -50,6 +50,16 @@ Data access to download ebirdst content is granted through an Access Request For
 
 After completing the Access Request Form, you will be provided a Status and Trends Data Products access key, which you will need when downloading data. To store the key so the package can access it when downloading data, use the function `set_ebirdst_access_key("XXXXX")`, where `"XXXXX"` is the access key provided to you.
 
+## Workflow Overview
+
+The package consists of three primary functions:
+
+1.    `grid_range()` - applies a regular grid to a species seasonal range map. Downloads ebirdst range map for a given species.
+
+2.    `overlay_range_data()` - overlays the gridded range map information from `grid_range()` with spatial (and optionally annual) monitoring data from a given program to calculate the proportion of the species range (overall and/or annual) within grid cells that have monitoring data.
+
+3.    `regional_summary()` - conducts a spatial join of a regional map with the coverage maps from `overlay_range_data()` to summarise coverage within those regions.
+
 ## Example
 
 This is a basic example which shows you how to assess the coverage of the North American Breeding Bird Survey (BBS) of Baird's Sparrow. The BBS survey data for Baird's Sparrow are supplied with the package. These example data are the survey event information for all surveys on BBS routes where the species has been observed at least once since 1966 - essentially, the survey events that would be included in a standard trend analysis of the BBS for this particular species. These survey data will be used in the second step of the example.
@@ -134,7 +144,15 @@ basp_coverage <- overlay_range_data(range = range_info,
 
 The output from the `overlay_range_data()` function is a list with five objects.
 
-1.    coverage_map - map of the cells in the species' range that intersect the survey data. That is, cells that are covered by the monitoring program. If a year column was included with the input data, then this mapped information is repeated for each year of the data.
+1.    coverage_map - map of the cells in the species' range that intersect the survey data in each year. If a year column was included with the input data, then this mapped information is repeated for each year of the data. If no year information was included, then this object will be identical to the cumulative_coverage_map
+
+2.    cumulative_coverage_map - map of cells in the species' range that intersect survey data in at least 1 year (if default value of minimum_n_years was used). 
+
+3.    total_gridded_range_area - land area of gridded range.
+
+4.    annual_coverage_estimate - dataframe of area and proportion of range covered in each year
+
+5.    cumulative_coverage_estimate = dataframe (1-row) of area and proportion of range covered.
 
 
 ```{r coverageDisplay}
@@ -165,6 +183,74 @@ coverage_overall <- ggplot()+
   labs(title = paste(example_species,"proportion covered = ",round(overall_coverage_estimate$coverage_proportion,2)))
     
 print(coverage_overall)
+
+```
+
+
+### Regional Summaries
+
+To summarise Baird's Sparrow coverage in the United States and Canada, the `regional_summary()` function requires the output of the previous function and a map of the two countries (polygons).
+
+```{r regionalSummary}
+
+national_map <- bbsBayes2::load_map(stratify_by = "prov_state")
+# The prov_state map in bbsBayes2 includes a country column indicator.
+
+national_summary <- regional_summary(coverage = basp_coverage,
+                                     regions = national_map,
+                                     region_name = "country")
+
+
+Canada_proportion_covered <- national_summary$regional_cumulative_coverage_estimate %>% 
+  filter(coverage == TRUE,
+         summary_region == "Canada") %>% 
+  select(proportion_of_region) %>% 
+  unlist()
+  
+US_proportion_covered <- national_summary$regional_cumulative_coverage_estimate %>% 
+  filter(coverage == TRUE,
+         summary_region == "United States of America") %>% 
+  select(proportion_of_region) %>% 
+  unlist()
+  
+
+
+```
+The output from the `regional_summary()` function is also a five object list, and the objects are very similar to the output from the `overlay_range_data()` function. 
+
+1.   regional_coverage_map - map of the annual coverage grid that includes an indicator of which region the grid cell is allocated to (based on spatial join).
+
+2.    regional_cumulative_coverage_map - map of the cumulative coverage grid that includes an indicator column for region.
+
+3.    regional_map - a map of the polygons used to define the regions.
+
+4.    regional_annual_coverage_estimate - dataframe of area and proportion of range covered in each year plus an additional column indicating which region each grid cell belongs to.
+
+5.    regional_cumulative_coverage_estimate - dataframe of area and proportion of range covered by region.
+
+Our example here suggests that the BBS covers approximately `r 100*round(Canada_proportion_covered,2)`% of the species range in Canada, and `r 100*round(US_proportion_covered,2)`% of the species range in the United States.
+
+
+```{r nationalSummaryMap}
+
+regional_cumulative_coverage_map <- national_summary$regional_cumulative_coverage_map
+regional_map <- national_summary$regional_map
+
+
+focus <- sf::st_bbox(regional_cumulative_coverage_map)
+
+country_map <- ggplot()+
+  geom_sf(data = regional_cumulative_coverage_map,
+          aes(fill = coverage))+
+  geom_sf(data = regional_map,
+          fill = NA)+
+  scale_fill_viridis_d()+
+  coord_sf(xlim = focus[c("xmin","xmax")],
+           ylim = focus[c("ymin","ymax")])+
+  facet_wrap(vars(summary_region))
+
+print(country_map)
+
 
 ```
 
