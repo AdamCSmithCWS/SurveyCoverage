@@ -34,7 +34,7 @@ You can install SurveyCoverage from [GitHub](https://github.com/) with:
 if (!requireNamespace("remotes", quietly = TRUE)) {
   install.packages("remotes")
 }
-remotes::install_github(AdamCSmithCWS/SurveyCoverage")
+remotes::install_github("AdamCSmithCWS/SurveyCoverage")
 ```
 
 ### Required additional package
