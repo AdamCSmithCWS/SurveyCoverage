@@ -18,13 +18,13 @@ grid_range(
 \item{species}{character English common name of bird species to
 support range data download using eBirdst package}
 
-\item{seasonal_range}{character default = breeding, season of range map to
+\item{seasonal_range}{character, ignored if range_map is supplied. default = breeding, season of range map to
 download. Acceptable values depend on the species' range estimates available
 from ebirdst, including: "breeding", "nonbreeding", "postbreeding_migration",
 and "prebreeding_migration", for migratory species and "resident" for
 non-migratory species.}
 
-\item{range_map}{Not yet implemented: eventually optional user-loaded range map
+\item{range_map}{Optional user-loaded range map, required to be
 e.g., sf package polygon layer defining the species' seasonal range}
 
 \item{crs_equal_area_custom}{optional crs numerical identifier of equal area
