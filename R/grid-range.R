@@ -8,12 +8,12 @@
 #'
 #' @param species character English common name of bird species to
 #' support range data download using eBirdst package
-#' @param seasonal_range character default = breeding, season of range map to
+#' @param seasonal_range character, ignored if range_map is supplied. default = breeding, season of range map to
 #' download. Acceptable values depend on the species' range estimates available
 #' from ebirdst, including: "breeding", "nonbreeding", "postbreeding_migration",
 #' and "prebreeding_migration", for migratory species and "resident" for
 #' non-migratory species.
-#' @param range_map Not yet implemented: eventually optional user-loaded range map
+#' @param range_map Optional user-loaded range map, required to be
 #' e.g., sf package polygon layer defining the species' seasonal range
 #' @param crs_equal_area_custom optional crs numerical identifier of equal area
 #' coordinate system
@@ -80,7 +80,9 @@ if(is.null(species)){
 
  if(!is.null(range_map)){
    # if a range map is provided, then skip the eBird download
-   stop("SurveyCoverage package does not yet handle custom range maps.")
+
+   abd_range_original <- range_map %>%
+     sf::st_make_valid()
 
   }else{
     #if range map not provided, then download the seasonal eBird range map
@@ -114,9 +116,13 @@ if(is.null(species)){
     }
 
 
-    if(!quiet){
-      message("cropping range map to the Western Hemisphere")
-    }
+
+  }#end of eBird range map download
+
+  if(!quiet){
+    message("cropping range map to the Western Hemisphere")
+  }
+
     #generate a simplified cropping polygon to exclude range outside
     #of the coverage grid (supplied or default)
     west_crop <- cov_grid %>%
@@ -166,7 +172,7 @@ if(is.null(species)){
              proportion_in_range = area_km2_inrange/area_km2)
 
 
-    }
+
 
   just_r <- cov_grid %>%
     dplyr::filter(proportion_in_range > 0) %>%
