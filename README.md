@@ -98,8 +98,8 @@ library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 #> ✔ dplyr     1.1.4     ✔ readr     2.1.5
 #> ✔ forcats   1.0.0     ✔ stringr   1.5.1
-#> ✔ ggplot2   3.5.0     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+#> ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
 #> ✔ purrr     1.0.2     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
@@ -289,13 +289,23 @@ the `regional_summary()` function requires the output of the previous
 function and a map of the two countries (polygons).
 
 ``` r
+library(bbsBayes2)
+#> Warning: package 'bbsBayes2' was built under R version 4.4.2
+#> bbsBayes2 v1.1.2.1
+#> Note: This is the successor to bbsBayes with a major shift in functionality, noteably:
+#>  - The Bayesian modelling engine has switched from *JAGS* to *Stan*
+#>  - The workflow has been streamlined, resulting in new functions/arguments
+#> See the documentation for more details: https://bbsBayes.github.io/bbsBayes2
 
 national_map <- bbsBayes2::load_map(stratify_by = "prov_state")
 # The prov_state map in bbsBayes2 includes a country column indicator.
 
 national_summary <- regional_summary(coverage = basp_coverage,
                                      regions = national_map,
-                                     region_name = "country")
+                                     region_name = "country",
+                                     use_intersection = TRUE)
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
 #> joining annual coverage map with regions
 
 
@@ -333,8 +343,8 @@ list, and the objects are very similar to the output from the
 5.  regional_cumulative_coverage_estimate - dataframe of area and
     proportion of range covered by region.
 
-Our example here suggests that the BBS covers approximately 83% of the
-species range in Canada, and 80% of the species range in the United
+Our example here suggests that the BBS covers approximately 85% of the
+species range in Canada, and 81% of the species range in the United
 States.
 
 ``` r

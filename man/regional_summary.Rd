@@ -8,7 +8,8 @@ regional_summary(
   coverage = NULL,
   regions = NULL,
   region_name = "country",
-  quiet = FALSE
+  quiet = FALSE,
+  use_intersection = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,12 @@ the unique region name}
 
 \item{quiet}{logical FALSE by default, set to TRUE to suppress warning and
 progress messages}
+
+\item{use_intersection}{logical TRUE by default. uses an intersection of the
+coverage grid with the summary regions, so that regions with some small
+portion of a coerage grid cell are included in the calculations. If set to
+FALSE, faster summaries but uses a spatial join that allocates partial coverage
+grid cells to the region with greatest overlap.}
 }
 \value{
 A list with the following five objects

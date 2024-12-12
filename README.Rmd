@@ -193,13 +193,15 @@ print(coverage_overall)
 To summarise Baird's Sparrow coverage in the United States and Canada, the `regional_summary()` function requires the output of the previous function and a map of the two countries (polygons).
 
 ```{r regionalSummary}
+library(bbsBayes2)
 
 national_map <- bbsBayes2::load_map(stratify_by = "prov_state")
 # The prov_state map in bbsBayes2 includes a country column indicator.
 
 national_summary <- regional_summary(coverage = basp_coverage,
                                      regions = national_map,
-                                     region_name = "country")
+                                     region_name = "country",
+                                     use_intersection = TRUE)
 
 
 Canada_proportion_covered <- national_summary$regional_cumulative_coverage_estimate %>% 
