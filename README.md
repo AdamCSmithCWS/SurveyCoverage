@@ -46,6 +46,19 @@ SurveyCoverage currently requires the package
 remotes::install_github("ebird/ebirdst")
 ```
 
+### Additional package to access BBS data
+
+One of the examples below requires the package `bbsBayes2`
+
+``` r
+
+install.packages("bbsBayes2",
+repos = c(bbsbayes = 'https://bbsbayes.r-universe.dev',CRAN = 'https://cloud.r-project.org'))
+
+library(bbsBayes2)
+fetch_bbs_data()
+```
+
 #### ebirdst Access Request - Necessary for use of SurveyCoverage package
 
 Data access to download ebirdst content is granted through an Access
@@ -79,13 +92,13 @@ The package consists of three primary functions:
 ## Example
 
 This is a basic example which shows you how to assess the coverage of
-the North American Breeding Bird Survey (BBS) of Baird’s Sparrow. The
-BBS survey data for Baird’s Sparrow are supplied with the package. These
-example data are the survey event information for all surveys on BBS
-routes where the species has been observed at least once since 1966 -
-essentially, the survey events that would be included in a standard
-trend analysis of the BBS for this particular species. These survey data
-will be used in the second step of the example.
+the North American Breeding Bird Survey (BBS) of Anna’s Hummingbird. The
+BBS survey data for Anna’s Hummingbird are supplied with the package.
+These example data are the survey event information for all surveys on
+BBS routes where the species has been observed at least once since
+1966 - essentially, the survey events that would be included in a
+standard trend analysis of the BBS for this particular species. These
+survey data will be used in the second step of the example.
 
 ### Download and apply a regular grid to the species’ ebird range map
 
@@ -96,21 +109,21 @@ then to stratify that range map based on an equal area, regular grid.
 library(SurveyCoverage)
 library(tidyverse)
 #> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.4     ✔ readr     2.1.5
-#> ✔ forcats   1.0.0     ✔ stringr   1.5.1
-#> ✔ ggplot2   3.5.0     ✔ tibble    3.2.1
-#> ✔ lubridate 1.9.3     ✔ tidyr     1.3.1
-#> ✔ purrr     1.0.2     
+#> ✔ dplyr     1.1.4     ✔ readr     2.1.6
+#> ✔ forcats   1.0.1     ✔ stringr   1.6.0
+#> ✔ ggplot2   4.0.1     ✔ tibble    3.3.0
+#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.2
+#> ✔ purrr     1.2.0     
 #> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 #> ✖ dplyr::filter() masks stats::filter()
 #> ✖ dplyr::lag()    masks stats::lag()
 #> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 
-example_species <- "Baird's Sparrow"
+example_species <- "Anna's Hummingbird"
 
 range_info <- grid_range(example_species)
-#> Downloading ebirdst range data for Baird's Sparrow baispa
-#> Downloading Status Data Products for baispa
+#> Downloading ebirdst range data for Anna's Hummingbird annhum
+#> Downloading Status Data Products for annhum
 #> Data already exists, use force = TRUE to re-download.
 #> cropping range map to the Western Hemisphere
 #> intersecting range map and coverage grid
@@ -163,7 +176,7 @@ map <- ggplot()+
 print(map)
 ```
 
-<img src="man/figures/README-rangeMap-1.png" width="100%" />
+<img src="man/figures/README-rangeMap-1.png" alt="" width="100%" />
 
 ### Overlaying the survey data with the gridded range
 
@@ -187,20 +200,22 @@ representing the year surveys were conducted at each site. If a year
 column is included, then the package calculates both annual coverage as
 well as the overall coverage.
 
-#### Coverage of Baird’s Sparrow by the BBS
+#### Coverage of Anna’s Hummingbird by the BBS
 
 The package includes an example survey dataset representing the BBS
-survey data for Baird’s Sparrow.
+survey data for Anna’s Hummingbird.
 
 ``` r
- basp <- SurveyCoverage::example_basp_bbs_data
- str(basp)
-#> tibble [5,490 × 5] (S3: tbl_df/tbl/data.frame)
-#>  $ english  : chr [1:5490] "Baird's Sparrow" "Baird's Sparrow" "Baird's Sparrow" "Baird's Sparrow" ...
-#>  $ year     : num [1:5490] 2006 2007 2008 2009 2010 ...
-#>  $ route    : chr [1:5490] "4-404" "4-404" "4-404" "4-404" ...
-#>  $ longitude: num [1:5490] -114 -114 -114 -114 -114 ...
-#>  $ latitude : num [1:5490] 49.9 49.9 49.9 49.9 49.9 ...
+ ANHU <- SurveyCoverage::example_bbs_data
+ str(ANHU)
+#> tibble [7,382 × 7] (S3: tbl_df/tbl/data.frame)
+#>  $ route     : chr [1:7382] "11-304" "11-304" "11-304" "11-304" ...
+#>  $ year      : num [1:7382] 2014 2015 2018 2019 2022 ...
+#>  $ count     : num [1:7382] 0 0 1 0 0 0 0 0 0 0 ...
+#>  $ state_num : num [1:7382] 11 11 11 11 11 11 11 11 11 11 ...
+#>  $ latitude  : num [1:7382] 49.7 49.7 49.7 49.7 49.7 ...
+#>  $ longitude : num [1:7382] -116 -116 -116 -116 -116 ...
+#>  $ route_name: chr [1:7382] "Premier Lake" "Premier Lake" "Premier Lake" "Premier Lake" ...
 ```
 
 These data are the start coordinates, route name, and year of every BBS
@@ -209,8 +224,8 @@ survey that would be included in an analysis of the species’ trend
 between 1966 and 2022).
 
 ``` r
-basp_coverage <- overlay_range_data(range = range_info,
-                                   survey_sites = basp,
+ANHU_coverage <- overlay_range_data(range = range_info,
+                                   survey_sites = ANHU,
                                    sites = "route",
                                    years = "year",
                                    x_coord = "longitude",
@@ -223,6 +238,7 @@ basp_coverage <- overlay_range_data(range = range_info,
 #>                     decimal degrees with coordinate reference system WGS 84,
 #>                     or that the correct coordinate reference system was provided
 #>                     to the argument crs_site_coordinates
+#> Transforming survey_sites to equal area crs to reconcile with crs of regular grid used for coverage and species range data
 #> Performing spatial join with range, this may take 5-10 minutes...
 #> Reconciling range area to include grid cells with
 #>           data outside of species' seasonal range
@@ -250,7 +266,7 @@ objects.
     proportion of range covered.
 
 ``` r
-coverage_map <- basp_coverage$coverage_map
+coverage_map <- ANHU_coverage$coverage_map
 
 coverage_selected <- coverage_map %>% 
   filter(year %in% c(1970,2000,2022))
@@ -264,12 +280,12 @@ coverage_by_selected_years <- ggplot()+
 print(coverage_by_selected_years)
 ```
 
-<img src="man/figures/README-coverageDisplay-1.png" width="100%" />
+<img src="man/figures/README-coverageDisplay-1.png" alt="" width="100%" />
 
 ``` r
 
-cumulative_coverage_map <- basp_coverage$cumulative_coverage_map
-overall_coverage_estimate <- basp_coverage$cumulative_coverage_estimate
+cumulative_coverage_map <- ANHU_coverage$cumulative_coverage_map
+overall_coverage_estimate <- ANHU_coverage$cumulative_coverage_estimate
 
 coverage_overall <- ggplot()+
   geom_sf(data = cumulative_coverage_map,
@@ -280,22 +296,32 @@ coverage_overall <- ggplot()+
 print(coverage_overall)
 ```
 
-<img src="man/figures/README-overallCoverage-1.png" width="100%" />
+<img src="man/figures/README-overallCoverage-1.png" alt="" width="100%" />
 
 ### Regional Summaries
 
-To summarise Baird’s Sparrow coverage in the United States and Canada,
-the `regional_summary()` function requires the output of the previous
-function and a map of the two countries (polygons).
+To summarise Anna’s Hummingbird coverage in the United States and
+Canada, the `regional_summary()` function requires the output of the
+previous function and a map of the two countries (polygons).
 
 ``` r
+library(bbsBayes2)
+#> Warning: package 'bbsBayes2' was built under R version 4.5.2
+#> bbsBayes2 v1.1.3.1
+#> Note: This is the successor to bbsBayes with a major shift in functionality, noteably:
+#>  - The Bayesian modelling engine has switched from *JAGS* to *Stan*
+#>  - The workflow has been streamlined, resulting in new functions/arguments
+#> See the documentation for more details: https://bbsBayes.github.io/bbsBayes2
 
 national_map <- bbsBayes2::load_map(stratify_by = "prov_state")
 # The prov_state map in bbsBayes2 includes a country column indicator.
 
-national_summary <- regional_summary(coverage = basp_coverage,
+national_summary <- regional_summary(coverage = ANHU_coverage,
                                      regions = national_map,
-                                     region_name = "country")
+                                     region_name = "country",
+                                     use_intersection = TRUE)
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
 #> joining annual coverage map with regions
 
 
@@ -333,8 +359,8 @@ list, and the objects are very similar to the output from the
 5.  regional_cumulative_coverage_estimate - dataframe of area and
     proportion of range covered by region.
 
-Our example here suggests that the BBS covers approximately 83% of the
-species range in Canada, and 80% of the species range in the United
+Our example here suggests that the BBS covers approximately 52% of the
+species range in Canada, and 64% of the species range in the United
 States.
 
 ``` r
@@ -358,4 +384,4 @@ country_map <- ggplot()+
 print(country_map)
 ```
 
-<img src="man/figures/README-nationalSummaryMap-1.png" width="100%" />
+<img src="man/figures/README-nationalSummaryMap-1.png" alt="" width="100%" />

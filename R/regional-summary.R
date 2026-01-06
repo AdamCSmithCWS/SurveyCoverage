@@ -14,6 +14,12 @@
 #' the unique region name
 #' @param quiet logical FALSE by default, set to TRUE to suppress warning and
 #' progress messages
+#' @param use_intersection logical TRUE by default. uses an intersection of the
+#' coverage grid with the summary regions, so that regions with some small
+#' portion of a coerage grid cell are included in the calculations. If set to
+#' FALSE, faster summaries but uses a spatial join that allocates partial coverage
+#' grid cells to the region with greatest overlap.
+#'
 #'
 #' @return A list with the following five objects
 #'
@@ -36,7 +42,8 @@
 regional_summary <- function(coverage = NULL,
                               regions = NULL,
                               region_name = "country",
-                             quiet = FALSE){
+                             quiet = FALSE,
+                             use_intersection = TRUE){
 
 
   if(is.null(regions) | class(regions)[[1]] != "sf"){
@@ -60,12 +67,17 @@ regional_summary <- function(coverage = NULL,
     dplyr::group_by(summary_region) %>%
     dplyr::summarise()
 
+  if(use_intersection){
+    regional_cumulative_coverage <- cumulative_coverage %>%
+      sf::st_intersection(.,regions_t,
+                          snap = s2_snap_precision(3))
+  }else{
 suppressWarnings(
   regional_cumulative_coverage <- cumulative_coverage %>%
       sf::st_join(.,regions_t,
                 largest = TRUE)
       )
-
+}
 
   regional_summary <- regional_cumulative_coverage %>%
     sf::st_drop_geometry() %>%

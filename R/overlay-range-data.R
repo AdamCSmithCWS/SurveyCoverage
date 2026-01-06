@@ -153,7 +153,10 @@ grid_w_range <- cov_grid %>%
 crs_equal_area_custom <- sf::st_crs(cov_grid)
 
   # transform site map to the same projected crs as the coverage grid
+if(!quiet){
 
+  message("Transforming survey_sites to equal area crs to reconcile with crs of regular grid used for coverage and species range data")
+}
   survey_sites <- sf::st_transform(survey_sites,
                                    crs_equal_area_custom)
 

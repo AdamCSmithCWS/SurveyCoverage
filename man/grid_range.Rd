@@ -11,6 +11,7 @@ grid_range(
   crs_equal_area_custom = NULL,
   coverage_grid_custom = NULL,
   resolution = "27km",
+  ebirdst_path = NULL,
   quiet = FALSE
 )
 }
@@ -35,6 +36,10 @@ layer, equal area grid within which to calculate coverage}
 
 \item{resolution}{character default = "27km" (low resolution), argument passed
 to `ebirdst::load_ranges()` function. Alternate high resolution = "9km".}
+
+\item{ebirdst_path}{optional character directory to download ebirdst data to.
+see argument `path` in `ebirdst::ebirdst_download_status()`. Default uses default
+settings in the `ebirdst` function.}
 
 \item{quiet}{logical FALSE by default, set to TRUE to suppress warning and
 progress messages}

@@ -44,6 +44,21 @@ SurveyCoverage currently requires the package [ebirdst](https://github.com/ebird
 remotes::install_github("ebird/ebirdst")
 ```
 
+### Additional package to access BBS data
+
+One of the examples below requires the package `bbsBayes2`
+
+```r
+
+install.packages("bbsBayes2",
+repos = c(bbsbayes = 'https://bbsbayes.r-universe.dev',CRAN = 'https://cloud.r-project.org'))
+
+library(bbsBayes2)
+fetch_bbs_data()
+
+```
+
+
 #### ebirdst Access Request - Necessary for use of SurveyCoverage package
 
 Data access to download ebirdst content is granted through an Access Request Form at: <https://ebird.org/st/request>. Access with this form generates a key to be used with this R package and is provided immediately (as long as commercial use is not requested).
@@ -62,7 +77,7 @@ The package consists of three primary functions:
 
 ## Example
 
-This is a basic example which shows you how to assess the coverage of the North American Breeding Bird Survey (BBS) of Baird's Sparrow. The BBS survey data for Baird's Sparrow are supplied with the package. These example data are the survey event information for all surveys on BBS routes where the species has been observed at least once since 1966 - essentially, the survey events that would be included in a standard trend analysis of the BBS for this particular species. These survey data will be used in the second step of the example.
+This is a basic example which shows you how to assess the coverage of the North American Breeding Bird Survey (BBS) of Anna's Hummingbird. The BBS survey data for Anna's Hummingbird are supplied with the package. These example data are the survey event information for all surveys on BBS routes where the species has been observed at least once since 1966 - essentially, the survey events that would be included in a standard trend analysis of the BBS for this particular species. These survey data will be used in the second step of the example.
 
 ### Download and apply a regular grid to the species' ebird range map
 
@@ -72,7 +87,7 @@ The package allows the user to download a range map using `ebirdst`, then to str
 library(SurveyCoverage)
 library(tidyverse)
 
-example_species <- "Baird's Sparrow"
+example_species <- "Anna's Hummingbird"
 
 range_info <- grid_range(example_species)
 # will fail if ebirdst access key was not successfully set-up (see above).
@@ -122,19 +137,19 @@ If the survey locations can be reliably represented as points, then at a minimum
 
 Either of these input types can optionally include an attribute (column) representing the year surveys were conducted at each site. If a year column is included, then the package calculates both annual coverage as well as the overall coverage. 
 
-#### Coverage of Baird's Sparrow by the BBS
+#### Coverage of Anna's Hummingbird by the BBS
 
-The package includes an example survey dataset representing the BBS survey data for Baird's Sparrow. 
-```{r baspData}
- basp <- SurveyCoverage::example_basp_bbs_data
- str(basp)
+The package includes an example survey dataset representing the BBS survey data for Anna's Hummingbird. 
+```{r ANHUData}
+ ANHU <- SurveyCoverage::example_bbs_data
+ str(ANHU)
 
 ```
 These data are the start coordinates, route name, and year of every BBS survey that would be included in an analysis of the species' trend (surveys on routes at which the species has been observed at some point between 1966 and 2022).
 
-```{r baspCoverage}
-basp_coverage <- overlay_range_data(range = range_info,
-                                   survey_sites = basp,
+```{r ANHUCoverage}
+ANHU_coverage <- overlay_range_data(range = range_info,
+                                   survey_sites = ANHU,
                                    sites = "route",
                                    years = "year",
                                    x_coord = "longitude",
@@ -157,7 +172,7 @@ The output from the `overlay_range_data()` function is a list with five objects.
 
 
 ```{r coverageDisplay}
-coverage_map <- basp_coverage$coverage_map
+coverage_map <- ANHU_coverage$coverage_map
 
 coverage_selected <- coverage_map %>% 
   filter(year %in% c(1970,2000,2022))
@@ -174,8 +189,8 @@ print(coverage_by_selected_years)
 
 ```{r overallCoverage}
 
-cumulative_coverage_map <- basp_coverage$cumulative_coverage_map
-overall_coverage_estimate <- basp_coverage$cumulative_coverage_estimate
+cumulative_coverage_map <- ANHU_coverage$cumulative_coverage_map
+overall_coverage_estimate <- ANHU_coverage$cumulative_coverage_estimate
 
 coverage_overall <- ggplot()+
   geom_sf(data = cumulative_coverage_map,
@@ -190,16 +205,18 @@ print(coverage_overall)
 
 ### Regional Summaries
 
-To summarise Baird's Sparrow coverage in the United States and Canada, the `regional_summary()` function requires the output of the previous function and a map of the two countries (polygons).
+To summarise Anna's Hummingbird coverage in the United States and Canada, the `regional_summary()` function requires the output of the previous function and a map of the two countries (polygons).
 
 ```{r regionalSummary}
+library(bbsBayes2)
 
 national_map <- bbsBayes2::load_map(stratify_by = "prov_state")
 # The prov_state map in bbsBayes2 includes a country column indicator.
 
-national_summary <- regional_summary(coverage = basp_coverage,
+national_summary <- regional_summary(coverage = ANHU_coverage,
                                      regions = national_map,
-                                     region_name = "country")
+                                     region_name = "country",
+                                     use_intersection = TRUE)
 
 
 Canada_proportion_covered <- national_summary$regional_cumulative_coverage_estimate %>% 

@@ -21,6 +21,9 @@
 #' layer, equal area grid within which to calculate coverage
 #' @param resolution character default = "27km" (low resolution), argument passed
 #' to `ebirdst::load_ranges()` function. Alternate high resolution = "9km".
+#' @param ebirdst_path optional character directory to download ebirdst data to.
+#' see argument `path` in `ebirdst::ebirdst_download_status()`. Default uses default
+#' settings in the `ebirdst` function.
 #' @param quiet logical FALSE by default, set to TRUE to suppress warning and
 #' progress messages
 #'
@@ -51,6 +54,7 @@ grid_range <- function(species = NULL,
                            crs_equal_area_custom = NULL,
                            coverage_grid_custom = NULL,
                            resolution = "27km",
+                       ebirdst_path = NULL,
                        quiet = FALSE){
 
 
@@ -91,13 +95,18 @@ if(is.null(species)){
     if(!quiet){
       message(paste("Downloading ebirdst range data for",species,species_ebird))
     }
+    if(is.null(ebirdst_path)){
+      ebirdst_path <- ebirdst::ebirdst_data_dir()
+    }
     down <- try(ebirdst::ebirdst_download_status(species_ebird,
                                         download_ranges = TRUE,
-                                        download_abundance = FALSE),
+                                        download_abundance = FALSE,
+                                        path = ebirdst_path),
                 silent = TRUE)
 
     if(methods::is(down,"try-error")){
-      stop(paste("eBirdst range data do not exist for",species,species_ebird))
+      stop(paste("eBirdst range data may not exist for",species,species_ebird,
+                 "see this error message:",down))
     }
 
     abd_seasonal_range <- ebirdst::load_ranges(species = species, #metric = "mean",
